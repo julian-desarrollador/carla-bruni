@@ -3,7 +3,7 @@
 import type { ImgHTMLAttributes, MouseEventHandler } from "react";
 import { useCallback, useState } from "react";
 
-/** Logo en /public (usar en preload del layout). */
+/** Logo en /public (usar en preload del layout) */
 export const BRAND_LOGO_SRC = "/logo2.png";
 export const BRAND_LOGO_SRC2 = "/logo.jpeg";
 
