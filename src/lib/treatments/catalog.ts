@@ -9,6 +9,12 @@ export const TREATMENT_CATEGORIES = [
 
 export type TreatmentCategory = (typeof TREATMENT_CATEGORIES)[number];
 
+export function categoryChipLabel(category: TreatmentCategory): string {
+  if (category === "Freyja · Low Cost") return "Low Cost";
+  if (category === "Freyja · Premium") return "Premium";
+  return category;
+}
+
 const IMG = {
   facial: "https://images.unsplash.com/photo-1570172619643-d5b24d6b0945?auto=format&fit=crop&w=900&q=80",
   tech: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=900&q=80",
@@ -257,4 +263,31 @@ export function panelDurationLabel(treatmentName: string, category: string): str
   if (category === "Freyja · Premium") return "60′–90′";
   if (category === "Corporal") return "40′–60′";
   return "Consultar";
+}
+
+/** Máximo de tratamientos en un mismo turno (web y panel). */
+export const MAX_SERVICES_PER_BOOKING = 4;
+
+/** Orden estable, sin duplicados, solo ids válidos del catálogo. */
+export function normalizeServiceIds(ids: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of ids) {
+    const id = raw.trim();
+    if (!id || seen.has(id) || !findSalonTreatmentById(id)) continue;
+    seen.add(id);
+    out.push(id);
+    if (out.length >= MAX_SERVICES_PER_BOOKING) break;
+  }
+  return out;
+}
+
+export function primaryTreatmentIdFromServiceIds(ids: string[]): string {
+  return normalizeServiceIds(ids)[0] ?? "";
+}
+
+export function totalDurationMinutesForServiceIds(ids: string[]): number {
+  return normalizeServiceIds(ids).reduce((acc, id) => {
+    return acc + (findSalonTreatmentById(id)?.durationMinutes ?? 0);
+  }, 0);
 }

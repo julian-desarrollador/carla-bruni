@@ -97,27 +97,27 @@ export function MisTurnosClient() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-md px-4 pt-6 pb-24">
+    <main className="mx-auto w-full max-w-xl px-5 pt-8 pb-28">
       <header className="mb-5 flex items-center gap-3">
         <Link
           href="/perfil"
-          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-[#171717] text-[var(--soft-gray)]/88 hover:bg-[#1d1d1d]"
+          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-600 shadow-sm hover:bg-gray-50"
           aria-label="Volver al perfil"
         >
           <ChevronLeft className="h-5 w-5" strokeWidth={1.85} />
         </Link>
         <div>
-          <h1 className="font-heading text-[22px] leading-tight text-[var(--premium-gold)]">Mis turnos</h1>
-          <p className="mt-0.5 text-[12px] text-[var(--soft-gray)]/55">Próximos y pasados</p>
+          <h1 className="font-heading text-[22px] leading-tight font-bold text-[#B88E2F]">Mis turnos</h1>
+          <p className="mt-0.5 text-[12px] text-gray-500">Próximos y pasados</p>
         </div>
       </header>
 
-      <div className="mb-4 flex rounded-2xl border border-white/10 bg-[#181818] p-1">
+      <div className="mb-4 flex rounded-2xl border border-gray-200 bg-[#F5F5F5] p-1">
         <button
           type="button"
           onClick={() => setTab("upcoming")}
           className={`flex-1 cursor-pointer rounded-xl py-2.5 text-[13px] font-semibold transition ${
-            tab === "upcoming" ? "bg-[var(--premium-gold)] text-black" : "text-[var(--soft-gray)]/75 hover:bg-white/5"
+            tab === "upcoming" ? "bg-[#B88E2F] text-white shadow-sm" : "text-gray-600 hover:bg-white"
           }`}
         >
           Próximos ({upcoming.length})
@@ -126,7 +126,7 @@ export function MisTurnosClient() {
           type="button"
           onClick={() => setTab("past")}
           className={`flex-1 cursor-pointer rounded-xl py-2.5 text-[13px] font-semibold transition ${
-            tab === "past" ? "bg-[var(--premium-gold)] text-black" : "text-[var(--soft-gray)]/75 hover:bg-white/5"
+            tab === "past" ? "bg-[#B88E2F] text-white shadow-sm" : "text-gray-600 hover:bg-white"
           }`}
         >
           Pasados ({past.length})
@@ -134,9 +134,9 @@ export function MisTurnosClient() {
       </div>
 
       {error ? (
-        <p role="alert" className="mb-4 rounded-xl border border-amber-500/35 bg-amber-950/25 px-3 py-2.5 text-[13px] text-amber-100/95">
+        <p role="alert" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-900">
           {error}{" "}
-          <Link href="/perfil#acceso" className="font-semibold text-[var(--premium-gold)] underline-offset-2 hover:underline">
+          <Link href="/perfil#acceso" className="font-semibold text-[#B88E2F] underline-offset-2 hover:underline">
             Ir a acceso
           </Link>
         </p>
@@ -144,23 +144,23 @@ export function MisTurnosClient() {
       {successMessage ? (
         <p
           role="status"
-          className="mb-4 rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-3 py-2.5 text-[13px] text-emerald-100/95"
+          className="mb-4 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-[13px] text-emerald-800"
         >
           {successMessage}
         </p>
       ) : null}
 
       {rows === null ? (
-        <p className="py-10 text-center text-[14px] text-[var(--soft-gray)]/55">Cargando…</p>
+        <p className="py-10 text-center text-[14px] text-gray-500">Cargando…</p>
       ) : list.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-10">
-          <p className="text-[14px] text-[var(--soft-gray)]/55">
+          <p className="text-[14px] text-gray-500">
             {tab === "upcoming" ? "No tenés turnos próximos." : "No hay turnos pasados para mostrar."}
           </p>
           {tab === "upcoming" ? (
             <Link
               href="/turnos"
-              className="inline-flex h-10 items-center rounded-2xl bg-[var(--premium-gold)] px-5 text-[13px] font-semibold text-black transition hover:opacity-90 whitespace-nowrap"
+              className="inline-flex h-10 items-center rounded-full bg-[#B88E2F] px-5 text-[13px] font-semibold whitespace-nowrap text-white transition hover:opacity-90"
             >
               Reservar nuevo turno
             </Link>
@@ -171,30 +171,30 @@ export function MisTurnosClient() {
           {list.map((r) => (
             <li
               key={r.id}
-              className="rounded-2xl border border-white/8 bg-[#171717] px-4 py-4 shadow-[0_10px_28px_rgba(0,0,0,0.35)]"
+              className="rounded-[24px] border border-gray-100 bg-white px-4 py-4 shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
             >
-              <p className="text-[16px] font-semibold leading-tight text-[var(--soft-gray)]">
-                <span className="text-[var(--premium-gold)]">
+              <p className="text-[16px] leading-tight font-semibold text-gray-900">
+                <span className="text-[#B88E2F]">
                   {r.timeLocal}
-                  <span className="ml-1 text-[13px] font-medium text-[var(--premium-gold)]/75">hs</span>
+                  <span className="ml-1 text-[13px] font-medium text-[#B88E2F]/75">hs</span>
                 </span>
-                <span className="text-[var(--soft-gray)]/90"> · {formatDayMonthFromKey(r.dateKey)}</span>
+                <span className="text-gray-800"> · {formatDayMonthFromKey(r.dateKey)}</span>
               </p>
-              <p className="mt-1.5 text-[12px] text-[var(--soft-gray)]/52">{r.displayDate}</p>
-              <p className="mt-2.5 text-[16px] font-semibold text-[var(--soft-gray)]">{r.treatmentName}</p>
-              <p className="mt-0.5 text-[12px] text-[var(--soft-gray)]/58">{r.subtitle}</p>
+              <p className="mt-1.5 text-[12px] text-gray-500">{r.displayDate}</p>
+              <p className="mt-2.5 text-[16px] font-semibold text-gray-900">{r.treatmentName}</p>
+              <p className="mt-0.5 text-[12px] text-gray-500">{r.subtitle}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-[var(--soft-gray)]/88">
+                <span className="rounded-full bg-[#F5F5F5] px-2.5 py-1 text-[11px] font-medium text-gray-700">
                   {reservationStatusLabel(r.reservationStatus)}
                 </span>
                 {r.source === "panel" ? (
-                  <span className="rounded-full bg-sky-500/14 px-2.5 py-1 text-[11px] font-semibold text-sky-200/95">
+                  <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-800">
                     Cargado en salón
                   </span>
                 ) : null}
               </div>
               {r.reservationStatus === "cancelled" && r.cancelledBy === "panel" ? (
-                <p className="mt-2 rounded-xl border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-[12px] leading-snug text-amber-100/88">
+                <p className="mt-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[12px] leading-snug text-amber-900">
                   Este turno fue cancelado desde el panel del salón.
                 </p>
               ) : null}
@@ -202,7 +202,7 @@ export function MisTurnosClient() {
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Link
                     href={`/perfil/mis-turnos/${encodeURIComponent(r.id)}/reprogramar`}
-                    className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-[var(--premium-gold)]/45 bg-[var(--premium-gold)]/12 px-3 text-[12px] font-semibold text-[var(--premium-gold)] transition hover:bg-[var(--premium-gold)]/18"
+                    className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-[#B88E2F]/45 bg-[#B88E2F]/10 px-3 text-[12px] font-semibold text-[#B88E2F] transition hover:bg-[#B88E2F]/16"
                   >
                     Cambiar horario
                   </Link>
@@ -210,7 +210,7 @@ export function MisTurnosClient() {
                     type="button"
                     disabled={cancellingId === r.id}
                     onClick={() => setCancelConfirmId(r.id)}
-                    className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-red-400/45 bg-red-500/10 px-3 text-[12px] font-semibold text-red-200/95 transition hover:bg-red-500/16 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-9 cursor-pointer items-center rounded-xl border border-red-300 bg-red-50 px-3 text-[12px] font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {cancellingId === r.id ? "Cancelando..." : "Cancelar turno"}
                   </button>
@@ -221,10 +221,10 @@ export function MisTurnosClient() {
         </ul>
       )}
       {me === "authed" ? (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
+        <div className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2">
           <Link
             href="/turnos"
-            className="inline-flex h-10 items-center rounded-2xl bg-[var(--premium-gold)] px-5 text-[13px] font-semibold text-black shadow-[0_6px_22px_rgba(0,0,0,0.45)] transition hover:opacity-90 whitespace-nowrap"
+            className="inline-flex h-10 items-center rounded-full bg-[#B88E2F] px-5 text-[13px] font-semibold whitespace-nowrap text-white shadow-md transition hover:opacity-90"
           >
             + Reservar nuevo turno
           </Link>
@@ -233,7 +233,7 @@ export function MisTurnosClient() {
 
       {cancelConfirmId ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
           onClick={() => {
             if (cancellingId !== cancelConfirmId) {
               setCancelConfirmId(null);
@@ -241,11 +241,11 @@ export function MisTurnosClient() {
           }}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-white/12 bg-[#171717] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
+            className="w-full max-w-sm rounded-[24px] border border-gray-100 bg-white p-4 shadow-[0_18px_45px_rgba(0,0,0,0.12)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-heading text-[20px] text-[var(--soft-gray)]">Cancelar turno</h3>
-            <p className="mt-2 text-[13px] leading-relaxed text-[var(--soft-gray)]/78">
+            <h3 className="font-heading text-[20px] font-bold text-gray-900">Cancelar turno</h3>
+            <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
               ¿Estás seguro que deseás cancelar este turno? Esta acción no se puede deshacer.
             </p>
             <div className="mt-4 flex items-center justify-end gap-2">
@@ -253,7 +253,7 @@ export function MisTurnosClient() {
                 type="button"
                 onClick={() => setCancelConfirmId(null)}
                 disabled={cancellingId === cancelConfirmId}
-                className="inline-flex h-9 items-center rounded-xl border border-white/15 px-3 text-[12px] font-semibold text-[var(--soft-gray)]/85 transition hover:bg-white/5 disabled:opacity-60"
+                className="inline-flex h-9 items-center rounded-xl border border-gray-200 px-3 text-[12px] font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
               >
                 Volver
               </button>
@@ -266,7 +266,7 @@ export function MisTurnosClient() {
                   setCancelConfirmId(null);
                 }}
                 disabled={cancellingId === cancelConfirmId}
-                className="inline-flex h-9 items-center rounded-xl border border-red-400/45 bg-red-500/12 px-3 text-[12px] font-semibold text-red-200/95 transition hover:bg-red-500/18 disabled:opacity-60"
+                className="inline-flex h-9 items-center rounded-xl border border-red-300 bg-red-50 px-3 text-[12px] font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-60"
               >
                 {cancellingId === cancelConfirmId ? "Cancelando..." : "Sí, cancelar"}
               </button>

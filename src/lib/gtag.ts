@@ -42,3 +42,8 @@ export function event(action: string, params?: Record<string, unknown>): void {
   if (!isGaEnabled()) return;
   window.gtag!("event", action, params ?? {});
 }
+
+/** Avance de paso en el wizard de reserva pública. */
+export function trackWizardContinue(step: number): void {
+  event("wizard_continue", { event_category: "appointments", event_label: `step_${step}` });
+}

@@ -66,15 +66,15 @@ export function PerfilHomeClient() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-4 pt-6 pb-24">
+    <main className="mx-auto w-full max-w-xl px-5 pt-8 pb-28">
       <header className="mb-5 text-center">
-        <h1 className="font-heading text-[28px] leading-none">Perfil</h1>
+        <h1 className="font-heading text-[40px] leading-none font-bold tracking-tight">Perfil</h1>
         {me === "authed" ? (
           <div className="mt-3 space-y-1.5">
-            <p className="text-[17px] font-medium leading-snug text-[var(--soft-gray)]">
+            <p className="text-[17px] leading-snug font-medium text-gray-800">
               {welcomeName ? (
                 <>
-                  Hola, <span className="text-[var(--premium-gold)]">{welcomeName}</span>
+                  Hola, <span className="text-[#B88E2F]">{welcomeName}</span>
                 </>
               ) : (
                 <span>Bienvenido/a</span>
@@ -84,29 +84,27 @@ export function PerfilHomeClient() {
               type="button"
               disabled={busy}
               onClick={() => void handleLogout()}
-              className="text-[12px] cursor-pointer text-[var(--soft-gray)]/55 underline-offset-2 hover:underline disabled:opacity-50"
+              className="cursor-pointer text-[12px] text-gray-500 underline-offset-2 hover:underline disabled:opacity-50"
             >
               Cerrar sesión
             </button>
           </div>
         ) : me === "guest" ? (
-          <p className="mt-2 text-[12px] text-[var(--soft-gray)]/62">
-            Iniciá sesión con tu WhatsApp para ver tus turnos.
-          </p>
+          <p className="mt-2 text-[14px] text-gray-500">Iniciá sesión con tu WhatsApp para ver tus turnos.</p>
         ) : (
-          <p className="mt-2 text-[12px] text-[var(--soft-gray)]/50">Comprobando sesión…</p>
+          <p className="mt-2 text-[14px] text-gray-400">Comprobando sesión…</p>
         )}
       </header>
 
       {me === "guest" ? (
         <section
           id="acceso"
-          className="mb-4 rounded-2xl border border-white/8 bg-[#181818] px-4 py-4 shadow-[0_14px_30px_rgba(0,0,0,0.65)]"
+          className="mb-4 rounded-[24px] border border-gray-100 bg-white px-4 py-4 shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
         >
-          <p className="text-[11px] tracking-[0.14em] text-[var(--soft-gray)]/55">Acceso</p>
+          <p className="text-[11px] tracking-[0.14em] text-gray-500">Acceso</p>
           <form onSubmit={(e) => void handleLogin(e)} className="mt-3 space-y-3">
             <div>
-              <label htmlFor="perfil-phone" className="text-[11px] text-[var(--soft-gray)]/55">
+              <label htmlFor="perfil-phone" className="text-[12px] text-gray-500">
                 Mismo WhatsApp que usás al reservar
               </label>
               <input
@@ -118,18 +116,18 @@ export function PerfilHomeClient() {
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder="+54 9 11 …"
-                className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141414] px-3 py-3 text-[15px] text-[var(--soft-gray)] outline-none focus:border-[var(--premium-gold)]/55"
+                className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-[15px] text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#B88E2F]/50"
               />
             </div>
             {error ? (
-              <p role="alert" className="text-[12px] text-red-300/95">
+              <p role="alert" className="text-[12px] text-red-600">
                 {error}
               </p>
             ) : null}
             <button
               type="submit"
               disabled={busy}
-              className="flex h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-[var(--premium-gold)] text-[14px] font-semibold text-black shadow-[0_6px_20px_rgba(201,169,106,0.25)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full bg-[#B88E2F] text-[15px] font-semibold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "…" : "Ver mis datos"}
             </button>
@@ -137,71 +135,68 @@ export function PerfilHomeClient() {
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-white/8 bg-[#181818] px-3 py-1.5 shadow-[0_14px_30px_rgba(0,0,0,0.65)]">
-        <div className="divide-y divide-white/10">
-          <Link
-            href="/perfil/mis-turnos"
-            className="flex cursor-pointer items-center justify-between px-1 py-3"
-          >
+      <section className="rounded-[24px] border border-gray-100 bg-white px-3 py-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+        <div className="divide-y divide-gray-100">
+          <Link href="/perfil/mis-turnos" className="flex cursor-pointer items-center justify-between px-1 py-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/35">
-                <CalendarDays className="h-4 w-4 text-[var(--soft-gray)]/85" strokeWidth={1.7} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-[#F5F5F5]">
+                <CalendarDays className="h-4 w-4 text-[#B88E2F]" strokeWidth={1.7} />
               </div>
               <div>
-                <p className="text-[15px] font-medium text-[var(--soft-gray)]">Mis turnos</p>
-                <p className="mt-0.5 text-[11px] text-[var(--soft-gray)]/60">Próximos y pasados</p>
+                <p className="text-[15px] font-medium text-gray-900">Mis turnos</p>
+                <p className="mt-0.5 text-[12px] text-gray-500">Próximos y pasados</p>
               </div>
             </div>
-            <span className="text-xs text-[var(--soft-gray)]/50">›</span>
+            <span className="text-xs text-gray-400">›</span>
           </Link>
           <Link
             href="/perfil/historial-tratamientos"
             className="flex cursor-pointer items-center justify-between px-1 py-3"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/35">
-                <Clock3 className="h-4 w-4 text-[var(--soft-gray)]/85" strokeWidth={1.7} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-[#F5F5F5]">
+                <Clock3 className="h-4 w-4 text-[#B88E2F]" strokeWidth={1.7} />
               </div>
               <div>
-                <p className="text-[15px] font-medium text-[var(--soft-gray)]">Historial de tratamientos</p>
-                <p className="mt-0.5 text-[11px] text-[var(--soft-gray)]/60">Sesiones realizadas</p>
+                <p className="text-[15px] font-medium text-gray-900">Historial de tratamientos</p>
+                <p className="mt-0.5 text-[12px] text-gray-500">Sesiones realizadas</p>
               </div>
             </div>
-            <span className="text-xs text-[var(--soft-gray)]/50">›</span>
+            <span className="text-xs text-gray-400">›</span>
           </Link>
           <Link href="/promociones" className="flex cursor-pointer items-center justify-between px-1 py-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/35">
-                <Percent className="h-4 w-4 text-[var(--soft-gray)]/85" strokeWidth={1.7} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-[#F5F5F5]">
+                <Percent className="h-4 w-4 text-[#B88E2F]" strokeWidth={1.7} />
               </div>
               <div>
-                <p className="text-[15px] font-medium text-[var(--soft-gray)]">Promociones</p>
-                <p className="mt-0.5 text-[11px] text-[var(--soft-gray)]/60">Beneficios para vos</p>
+                <p className="text-[15px] font-medium text-gray-900">Promociones</p>
+                <p className="mt-0.5 text-[12px] text-gray-500">Beneficios para vos</p>
               </div>
             </div>
-            <span className="text-xs text-[var(--soft-gray)]/50">›</span>
+            <span className="text-xs text-gray-400">›</span>
           </Link>
           <div className="flex items-center justify-between px-1 py-3 opacity-45">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/35">
-                <UserCog className="h-4 w-4 text-[var(--soft-gray)]/85" strokeWidth={1.7} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-[#F5F5F5]">
+                <UserCog className="h-4 w-4 text-gray-500" strokeWidth={1.7} />
               </div>
               <div>
-                <p className="text-[15px] font-medium text-[var(--soft-gray)]">Datos personales</p>
-                <p className="mt-0.5 text-[11px] text-[var(--soft-gray)]/60">Próximamente</p>
+                <p className="text-[15px] font-medium text-gray-900">Datos personales</p>
+                <p className="mt-0.5 text-[12px] text-gray-500">Próximamente</p>
               </div>
             </div>
-            <span className="text-xs text-[var(--soft-gray)]/50">›</span>
+            <span className="text-xs text-gray-400">›</span>
           </div>
         </div>
       </section>
 
       {me === "guest" ? (
-        <section className="mt-4 rounded-2xl border border-white/6 bg-[#141414] px-4 py-3">
-          <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--soft-gray)]/70">Tip</p>
-          <p className="mt-1.5 text-[13px] text-[var(--soft-gray)]/92">
-            Usá el mismo número de WhatsApp que al reservar en la web o en el salón. Nadie más puede ver tus turnos
-            sin ese número.
+        <section className="mt-4 rounded-[24px] border border-gray-100 bg-[#F5F5F5] px-4 py-3">
+          <p className="text-[12px] tracking-[0.18em] text-[#B88E2F] uppercase">Tip</p>
+          <p className="mt-1.5 text-[14px] text-gray-700">
+            Usá el mismo número de WhatsApp que al reservar en la web o en el salón. Nadie más puede ver tus turnos sin
+            ese número.
           </p>
         </section>
       ) : null}

@@ -33,6 +33,17 @@ import {
   panelMonthTitle,
 } from "@/lib/booking/panel-month-grid";
 import { findSalonTreatmentById, panelDurationLabel } from "@/lib/treatments/catalog";
+import {
+  panelCard,
+  panelChip,
+  panelDayDefault,
+  panelDayOutside,
+  panelDaySelected,
+  panelEventCard,
+  panelIconBtn,
+  panelModal,
+  panelPage,
+} from "@/components/panel/panel-ui";
 
 import { PanelPublicBookingMode } from "./panel-public-booking-mode";
 
@@ -172,26 +183,26 @@ function StatusBadge({
             : null;
     return (
       <span className="inline-flex max-w-full flex-col gap-0.5">
-        <span className="inline-block w-fit rounded-full bg-red-500/12 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-red-300/95">
+        <span className="inline-block w-fit rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-red-700">
           Cancelada
         </span>
         {detail ? (
-          <span className="text-[10px] font-medium leading-tight text-red-200/75">{detail}</span>
+          <span className="text-[10px] font-medium leading-tight text-red-600/80">{detail}</span>
         ) : null}
       </span>
     );
   }
   if (reservationStatus === "pending_payment" || paymentStatus === "pending") {
     return (
-      <span className="inline-block rounded-full bg-amber-500/14 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-300/90">
+      <span className="inline-block rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-800">
         Pendiente
       </span>
     );
   }
   return (
-    <span className="inline-block rounded-full bg-emerald-500/14 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-emerald-300/95">
-      Confirmada
-    </span>
+      <span className="inline-block rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-emerald-800">
+        Confirmada
+      </span>
   );
 }
 
@@ -225,13 +236,13 @@ function BlockScopeHighlight({ scope }: { scope: BlockScopeDisplay }) {
         {scope.names.map((name) => (
           <span
             key={name}
-            className="inline-block max-w-full rounded-xl border border-amber-400/40 bg-gradient-to-br from-amber-500/22 to-orange-600/12 px-2.5 py-1.5 text-[13px] font-semibold leading-snug text-amber-50"
+            className="inline-block max-w-full rounded-xl border border-[#B88E2F]/35 bg-[#B88E2F]/10 px-2.5 py-1.5 text-[13px] leading-snug font-semibold text-[#996515]"
           >
             {name}
           </span>
         ))}
         {scope.extraCount > 0 ? (
-          <span className="inline-flex items-center rounded-xl border border-white/12 bg-white/6 px-2.5 py-1.5 text-[12px] font-medium text-[var(--soft-gray)]/70">
+          <span className="inline-flex items-center rounded-xl border border-gray-200 bg-[#F5F5F5] px-2.5 py-1.5 text-[12px] font-medium text-gray-600">
             +{scope.extraCount}
           </span>
         ) : null}
@@ -239,7 +250,7 @@ function BlockScopeHighlight({ scope }: { scope: BlockScopeDisplay }) {
     );
   }
   return (
-    <p className="mt-2 text-[16px] font-semibold leading-snug tracking-tight text-amber-50/98">
+    <p className="mt-2 text-[16px] leading-snug font-semibold tracking-tight text-gray-900">
       {scope.headline}
     </p>
   );
@@ -436,30 +447,30 @@ export function PanelTurnosDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#111111] pb-24 text-[var(--soft-gray)]">
+    <div className={panelPage}>
       <div className="mx-auto max-w-md px-4">
         <header className="flex items-start justify-between gap-4 pt-6 pb-1">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent-orange)] to-[var(--premium-gold)] shadow-[0_10px_28px_rgba(201,169,106,0.28)]">
-              <Sparkles className="h-6 w-6 text-[var(--on-accent)]" strokeWidth={2} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#B88E2F] shadow-md">
+              <Sparkles className="h-6 w-6 text-white" strokeWidth={2} />
             </div>
             <div>
-              <h1 className="font-heading text-[18px] leading-tight text-[var(--premium-gold)]">Carla Bruni · Espacio Freyja</h1>
-              <p className="text-[12px] leading-relaxed text-[var(--soft-gray)]/58">Dermocosmiatría</p>
+              <h1 className="font-heading text-[18px] leading-tight text-[#B88E2F]">Carla Bruni · Espacio Freyja</h1>
+              <p className="text-[12px] leading-relaxed text-gray-500">Dermocosmiatría</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <PanelPublicBookingMode />
             <Link
               href="/panel-turnos/bloqueo"
-              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-amber-500/35 bg-[#171717] text-amber-200/95 shadow-[0_6px_22px_rgba(0,0,0,0.35)] hover:bg-[#1d1d1d]"
+              className={`${panelIconBtn} border-amber-200 text-amber-800`}
               aria-label="Bloquear franja de agenda"
             >
               <Lock className="h-5 w-5" strokeWidth={2.25} />
             </Link>
             <Link
               href="/panel-turnos/nuevo"
-              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-[var(--premium-gold)]/35 bg-[#171717] text-[var(--premium-gold)] shadow-[0_6px_22px_rgba(0,0,0,0.35)] hover:bg-[#1d1d1d]"
+              className={`${panelIconBtn} text-[#B88E2F]`}
               aria-label="Agregar turno"
             >
               <Plus className="h-5 w-5" strokeWidth={2.25} />
@@ -467,30 +478,30 @@ export function PanelTurnosDashboard() {
           </div>
         </header>
 
-        <section className="mt-5 rounded-[28px] border border-white/8 bg-[#171717] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.38)]">
+        <section className={`mt-5 ${panelCard} p-4`}>
           <div className="relative mb-3 flex items-center justify-center px-10">
             <button
               type="button"
               onClick={prevMonth}
-              className="absolute left-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-[var(--soft-gray)]/70 hover:bg-white/5 hover:text-[var(--soft-gray)]"
+              className="absolute left-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-800"
               aria-label="Mes anterior"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <span className="text-center text-[15px] font-semibold capitalize tracking-tight text-[var(--soft-gray)]">
+            <span className="text-center text-[15px] font-semibold tracking-tight text-gray-900 capitalize">
               {panelMonthTitle(year, month)}
             </span>
             <button
               type="button"
               onClick={nextMonth}
-              className="absolute right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-[var(--soft-gray)]/70 hover:bg-white/5 hover:text-[var(--soft-gray)]"
+              className="absolute right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-800"
               aria-label="Mes siguiente"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-y-1 text-center text-[11px] font-semibold tracking-wide text-[var(--soft-gray)]/45">
+          <div className="grid grid-cols-7 gap-y-1 text-center text-[11px] font-semibold tracking-wide text-gray-400">
             {PANEL_WEEK_LETTERS.map((L) => (
               <div key={L} className="py-2">
                 {L}
@@ -523,10 +534,9 @@ export function PanelTurnosDashboard() {
                   <span
                     className={[
                       "flex h-9 w-9 items-center justify-center rounded-full text-[14px] font-semibold leading-none transition",
-                      inMonth ? "text-[var(--soft-gray)]" : "text-[var(--soft-gray)]/30",
-                      sel
-                        ? "bg-gradient-to-br from-[var(--accent-coral)] to-[var(--accent-orange)] text-white shadow-[0_8px_24px_rgba(201,169,106,0.35)]"
-                        : "hover:bg-white/5",
+                      inMonth && !sel ? panelDayDefault : "",
+                      !inMonth && !sel ? panelDayOutside : "",
+                      sel ? panelDaySelected : "hover:bg-gray-100",
                     ].join(" ")}
                   >
                     {cell.day}
@@ -547,21 +557,21 @@ export function PanelTurnosDashboard() {
             })}
           </div>
 
-          <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[10px] font-medium tracking-wide text-[var(--soft-gray)]/50">
+          <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[10px] font-medium tracking-wide text-gray-500">
             <span className="inline-flex items-center gap-1.5">
               <span className="flex h-2 flex-col items-center justify-center gap-0.5" aria-hidden>
                 <span className="block h-1 w-1 rounded-full bg-[var(--premium-gold)]" />
               </span>
               Turnos
             </span>
-            <span className="text-[var(--soft-gray)]/25" aria-hidden>
+            <span className="text-gray-300" aria-hidden>
               ·
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="block h-1 w-1 rounded-full bg-sky-400" aria-hidden />
               Bloqueo
             </span>
-            <span className="text-[var(--soft-gray)]/25" aria-hidden>
+            <span className="text-gray-300" aria-hidden>
               ·
             </span>
             <span className="inline-flex items-center gap-1.5">
@@ -576,10 +586,10 @@ export function PanelTurnosDashboard() {
 
         <div className="mt-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-[22px] font-bold leading-tight tracking-tight text-[var(--soft-gray)]">
+            <p className="text-[22px] leading-tight font-bold tracking-tight text-gray-900">
               {weekdayLongFromKey(selectedKey)}
             </p>
-            <p className="mt-0.5 text-[14px] text-[var(--soft-gray)]/55">{dayLongFromKey(selectedKey)}</p>
+            <p className="mt-0.5 text-[14px] text-gray-500">{dayLongFromKey(selectedKey)}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
@@ -588,8 +598,8 @@ export function PanelTurnosDashboard() {
               className={[
                 "flex items-center gap-1.5 rounded-2xl border px-3 py-2 text-[13px] transition",
                 showCancelled
-                  ? "border-red-400/35 bg-red-500/12 text-red-200/95"
-                  : "border-white/10 bg-[#171717] text-[var(--soft-gray)]/88 hover:bg-[#1d1d1d]",
+                  ? "border-red-300 bg-red-50 text-red-700"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50",
               ].join(" ")}
               aria-pressed={showCancelled}
               aria-label={showCancelled ? "Ocultar canceladas" : "Mostrar canceladas"}
@@ -598,7 +608,7 @@ export function PanelTurnosDashboard() {
               <span className="font-semibold">{cancelledCountSelectedDay}</span>
               <span className="font-semibold">{cancelledLabel}</span>
             </button>
-            <div className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-[#171717] px-3 py-2 text-[13px] text-[var(--soft-gray)]/88">
+            <div className={panelChip}>
               <CalendarDays className="h-4 w-4 text-[var(--premium-gold)]" strokeWidth={1.75} />
               <span className="font-semibold">
                 {dayRows.length} {dayRows.length === 1 ? "evento" : "eventos"}
@@ -609,9 +619,9 @@ export function PanelTurnosDashboard() {
 
         <div className="mt-4 flex flex-col gap-3">
           {loading ? (
-            <p className="py-10 text-center text-[14px] text-[var(--soft-gray)]/55">Cargando agenda…</p>
+            <p className="py-10 text-center text-[14px] text-gray-500">Cargando agenda…</p>
           ) : dayRows.length === 0 ? (
-            <p className="py-10 text-center text-[14px] text-[var(--soft-gray)]/55">
+            <p className="py-10 text-center text-[14px] text-gray-500">
               No hay turnos ni bloqueos este día.
             </p>
           ) : (
@@ -630,36 +640,36 @@ export function PanelTurnosDashboard() {
                 return (
                   <article
                     key={`block-${b.id}-${duplicateCount}`}
-                    className="rounded-[20px] border border-amber-500/25 bg-[#171717] px-4 py-4 shadow-[0_10px_32px_rgba(0,0,0,0.32)]"
+                    className={`${panelEventCard} border-amber-200`}
                   >
                     <div className="flex gap-3">
                       <div className="w-[min(6.75rem,32%)] shrink-0 text-left">
-                        <p className="text-[13px] font-bold leading-snug text-amber-100/95 sm:text-[15px] sm:leading-none">
+                        <p className="text-[13px] leading-snug font-bold text-amber-900 sm:text-[15px] sm:leading-none">
                           {fullDaySalon ? "Todo el día" : timeRange}
                         </p>
                         {fullDaySalon ? (
-                          <p className="mt-2 text-[11px] leading-none text-[var(--soft-gray)]/48">{timeRange}</p>
+                          <p className="mt-2 text-[11px] leading-none text-gray-400">{timeRange}</p>
                         ) : null}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex gap-2">
                           <Lock className="h-5 w-5 shrink-0 text-amber-300/90" strokeWidth={2} />
                           <div className="min-w-0 flex-1">
-                            <p className="text-[11px] font-medium tracking-[0.1em] text-[var(--soft-gray)]/52 uppercase">
+                            <p className="text-[11px] font-medium tracking-[0.1em] text-gray-500 uppercase">
                               {blockTypeLabel}
                             </p>
                             <BlockScopeHighlight scope={scopeDisplay} />
                             <div className="mt-3 flex flex-wrap items-center gap-2">
-                              <span className="inline-block rounded-full bg-amber-500/18 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-100/95">
+                              <span className="inline-block rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-800">
                                 {habitual ? "Cerrado" : "Bloqueo"}
                               </span>
                               {duplicateCount > 1 ? (
-                                <span className="inline-block rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--soft-gray)]/82">
+                                <span className="inline-block rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-700">
                                   ×{duplicateCount}
                                 </span>
                               ) : null}
                               {recurrenceLabel ? (
-                                <span className="inline-block rounded-full bg-white/8 px-2.5 py-1 text-[11px] font-semibold text-[var(--soft-gray)]/78">
+                                <span className="inline-block rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-600">
                                   {recurrenceLabel}
                                 </span>
                               ) : null}
@@ -670,8 +680,8 @@ export function PanelTurnosDashboard() {
                                 }
                                 className={
                                   habitual
-                                    ? "inline-flex h-8 cursor-pointer items-center rounded-lg border border-emerald-500/40 bg-emerald-500/12 px-3 text-[11px] font-semibold text-emerald-200/95 transition hover:bg-emerald-500/18"
-                                    : "cursor-pointer text-[11px] font-semibold text-red-300/90 underline-offset-2 hover:underline"
+                                    ? "inline-flex h-8 cursor-pointer items-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                                    : "cursor-pointer text-[11px] font-semibold text-red-700 underline-offset-2 hover:underline"
                                 }
                               >
                                 {habitual
@@ -682,7 +692,7 @@ export function PanelTurnosDashboard() {
                               </button>
                             </div>
                             {b.notes ? (
-                              <p className="mt-2 text-[12px] leading-snug text-[var(--soft-gray)]/55">{b.notes}</p>
+                              <p className="mt-2 text-[12px] leading-snug text-gray-500">{b.notes}</p>
                             ) : null}
                           </div>
                         </div>
@@ -699,7 +709,7 @@ export function PanelTurnosDashboard() {
               return (
                 <article
                   key={r.id}
-                  className="relative rounded-[20px] border border-white/8 bg-[#171717] px-4 py-4 shadow-[0_10px_32px_rgba(0,0,0,0.32)]"
+                  className={`relative ${panelEventCard}`}
                 >
                   {r.reservationStatus === "confirmed" || r.reservationStatus === "pending_payment" ? (
                     <button
@@ -708,15 +718,15 @@ export function PanelTurnosDashboard() {
                       disabled={cancellingReservationId === r.id}
                       aria-label="Cancelar turno"
                       title="Cancelar turno"
-                      className="absolute top-3 right-3 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-red-400/35 bg-red-500/10 text-red-200/95 transition hover:bg-red-500/16 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="absolute top-3 right-3 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-red-300 bg-red-50 text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.9} />
                     </button>
                   ) : null}
                   <div className="flex gap-3">
                     <div className="w-[52px] shrink-0 text-left">
-                      <p className="text-[15px] font-bold leading-none text-[var(--soft-gray)]">{r.timeLocal}</p>
-                      <p className="mt-2 text-[11px] leading-none text-[var(--soft-gray)]/48">
+                      <p className="text-[15px] leading-none font-bold text-gray-900">{r.timeLocal}</p>
+                      <p className="mt-2 text-[11px] leading-none text-gray-400">
                         {panelDurationLabel(r.treatmentName, r.category)}
                       </p>
                     </div>
@@ -724,8 +734,8 @@ export function PanelTurnosDashboard() {
                       <div className="flex gap-2">
                         <ServiceIcon category={r.category} />
                         <div className="min-w-0 flex-1">
-                          <p className="text-[15px] font-bold leading-snug text-[var(--soft-gray)]">{r.treatmentName}</p>
-                          <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[var(--soft-gray)]/58">
+                          <p className="text-[15px] leading-snug font-bold text-gray-900">{r.treatmentName}</p>
+                          <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-gray-500">
                             <User className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                             <span className="truncate">{r.customerName || "Cliente"}</span>
                           </p>
@@ -737,12 +747,12 @@ export function PanelTurnosDashboard() {
                             />
                             {r.waAttendanceConfirmedAt &&
                             (r.reservationStatus === "confirmed" || r.reservationStatus === "pending_payment") ? (
-                              <span className="inline-block rounded-full bg-teal-500/16 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-teal-200/95">
+                              <span className="inline-block rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-teal-800">
                                 Confirmó asistencia
                               </span>
                             ) : null}
                             {r.source === "panel" ? (
-                              <span className="inline-block rounded-full bg-sky-500/14 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-sky-200/95">
+                              <span className="inline-block rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-sky-800">
                                 Manual
                               </span>
                             ) : null}
@@ -781,7 +791,7 @@ export function PanelTurnosDashboard() {
             type="button"
             onClick={handleLogout}
             disabled={logoutBusy}
-            className="cursor-pointer text-[13px] text-[var(--soft-gray)]/50 underline-offset-4 hover:text-[var(--premium-gold)] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer text-[13px] text-gray-400 underline-offset-4 hover:text-[#B88E2F] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cerrar sesión del panel
           </button>
@@ -789,7 +799,7 @@ export function PanelTurnosDashboard() {
       </div>
       {cancelConfirmReservationId ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
           onClick={() => {
             if (cancellingReservationId !== cancelConfirmReservationId) {
               setCancelConfirmReservationId(null);
@@ -797,11 +807,11 @@ export function PanelTurnosDashboard() {
           }}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-white/12 bg-[#171717] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
+            className={panelModal}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-heading text-[20px] text-[var(--soft-gray)]">Cancelar turno</h3>
-            <p className="mt-2 text-[13px] leading-relaxed text-[var(--soft-gray)]/78">
+            <h3 className="font-heading text-[20px] font-bold text-gray-900">Cancelar turno</h3>
+            <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
               ¿Estás seguro que deseás cancelar este turno? Esta acción no se puede deshacer.
             </p>
             <div className="mt-4 flex items-center justify-end gap-2">
@@ -809,7 +819,7 @@ export function PanelTurnosDashboard() {
                 type="button"
                 onClick={() => setCancelConfirmReservationId(null)}
                 disabled={cancellingReservationId === cancelConfirmReservationId}
-                className="inline-flex h-9 items-center rounded-xl border border-white/15 px-3 text-[12px] font-semibold text-[var(--soft-gray)]/85 transition hover:bg-white/5 disabled:opacity-60"
+                className="inline-flex h-9 items-center rounded-xl border border-gray-200 px-3 text-[12px] font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
               >
                 Volver
               </button>
@@ -822,7 +832,7 @@ export function PanelTurnosDashboard() {
                   setCancelConfirmReservationId(null);
                 }}
                 disabled={cancellingReservationId === cancelConfirmReservationId}
-                className="inline-flex h-9 items-center rounded-xl border border-red-400/45 bg-red-500/12 px-3 text-[12px] font-semibold text-red-200/95 transition hover:bg-red-500/18 disabled:opacity-60"
+                className="inline-flex h-9 items-center rounded-xl border border-red-300 bg-red-50 px-3 text-[12px] font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-60"
               >
                 {cancellingReservationId === cancelConfirmReservationId ? "Cancelando..." : "Sí, cancelar"}
               </button>

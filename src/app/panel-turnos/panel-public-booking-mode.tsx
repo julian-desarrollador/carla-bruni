@@ -93,17 +93,17 @@ export function PanelPublicBookingMode() {
       <button
         type="button"
         onClick={() => setSettingsOpen(true)}
-        className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl border bg-[#171717] shadow-[0_6px_22px_rgba(0,0,0,0.35)] transition hover:bg-[#1d1d1d] ${
+        className={`relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl border bg-white shadow-sm transition hover:bg-gray-50 ${
           savedPulse
-            ? "border-emerald-500/50 text-emerald-300/95"
-            : "border-white/12 text-[var(--soft-gray)]/88"
+            ? "border-emerald-500/50 text-emerald-800"
+            : "border-gray-200 text-gray-700"
         }`}
         aria-label="Configurar reservas en la web"
       >
         <Globe className="h-5 w-5" strokeWidth={2} aria-hidden />
         {isConsultMode ? (
           <span
-            className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#25D366] ring-2 ring-[#171717]"
+            className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#25D366] ring-2 ring-white"
             aria-hidden
           />
         ) : null}
@@ -111,23 +111,23 @@ export function PanelPublicBookingMode() {
 
       {settingsOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 sm:items-center sm:px-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:px-4"
           onClick={closeSettings}
         >
           <div
-            className="w-full max-w-sm rounded-t-[24px] border border-white/12 bg-[#171717] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.5)] sm:rounded-2xl"
+            className="w-full max-w-sm rounded-t-[24px] border border-gray-100 bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-heading text-[20px] text-[var(--soft-gray)]">Reservas en la web</h3>
-                <p className="mt-1 text-[12px] text-[var(--soft-gray)]/55">Qué ven los clientes en /turnos</p>
+                <h3 className="font-heading text-[20px] text-gray-900">Reservas en la web</h3>
+                <p className="mt-1 text-[12px] text-gray-500">Qué ven los clientes en /turnos</p>
               </div>
               <button
                 type="button"
                 onClick={closeSettings}
                 disabled={saving}
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl text-[var(--soft-gray)]/70 hover:bg-white/5 disabled:opacity-50"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 disabled:opacity-50"
                 aria-label="Cerrar"
               >
                 <X className="h-5 w-5" strokeWidth={2} />
@@ -135,22 +135,22 @@ export function PanelPublicBookingMode() {
             </div>
 
             {enabled === null ? (
-              <p className="text-[13px] text-[var(--soft-gray)]/55">Cargando…</p>
+              <p className="text-[13px] text-gray-500">Cargando…</p>
             ) : (
               <>
-                <p className="text-[14px] font-medium text-[var(--soft-gray)]">
+                <p className="text-[14px] font-medium text-gray-900">
                   Modo actual:{" "}
-                  <span className={isBookingMode ? "text-emerald-300/95" : "text-[#25D366]"}>
+                  <span className={isBookingMode ? "text-emerald-800" : "text-[#25D366]"}>
                     {isBookingMode ? "Reserva online" : "Consulta por WhatsApp"}
                   </span>
                 </p>
                 {envForced ? (
-                  <p className="mt-2 text-[11px] leading-snug text-amber-200/85">
+                  <p className="mt-2 text-[11px] leading-snug text-amber-800">
                     Fijado por el servidor (variable de entorno). Quiten la variable en Vercel para controlarlo desde
                     acá.
                   </p>
                 ) : (
-                  <p className="mt-2 text-[11px] leading-snug text-[var(--soft-gray)]/50">
+                  <p className="mt-2 text-[11px] leading-snug text-gray-400">
                     {isBookingMode
                       ? "Confirman el turno en la web; el horario queda en la agenda (sin pago online por ahora)."
                       : "Eligen horario en la agenda y consultan por WhatsApp."}
@@ -159,7 +159,7 @@ export function PanelPublicBookingMode() {
               </>
             )}
 
-            {loadError ? <p className="mt-3 text-[11px] text-red-300/90">{loadError}</p> : null}
+            {loadError ? <p className="mt-3 text-[11px] text-red-700">{loadError}</p> : null}
 
             {enabled !== null && !envForced ? (
               <div className="mt-4 flex flex-col gap-2">
@@ -172,8 +172,8 @@ export function PanelPublicBookingMode() {
                   }}
                   className={`rounded-xl border px-3 py-2.5 text-[12px] font-semibold transition ${
                     isConsultMode
-                      ? "border-[#25D366]/45 bg-[#25D366]/12 text-[#7dffb0]"
-                      : "border-white/10 bg-black/20 text-[var(--soft-gray)]/75 hover:border-white/18 hover:bg-white/5"
+                      ? "border-[#25D366]/45 bg-[#25D366]/12 text-emerald-800"
+                      : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-200 hover:bg-gray-100"
                   } disabled:cursor-default`}
                 >
                   Consulta por WhatsApp
@@ -187,8 +187,8 @@ export function PanelPublicBookingMode() {
                   }}
                   className={`rounded-xl border px-3 py-2.5 text-[12px] font-semibold transition ${
                     isBookingMode
-                      ? "border-emerald-500/40 bg-emerald-500/12 text-emerald-200/95"
-                      : "border-white/10 bg-black/20 text-[var(--soft-gray)]/75 hover:border-white/18 hover:bg-white/5"
+                      ? "border-emerald-500/40 bg-emerald-500/12 text-emerald-800"
+                      : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-200 hover:bg-gray-100"
                   } disabled:cursor-default`}
                 >
                   Reserva online
@@ -201,33 +201,33 @@ export function PanelPublicBookingMode() {
 
       {confirmTarget !== null ? (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4"
           onClick={() => {
             if (!saving) setConfirmTarget(null);
           }}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-white/12 bg-[#171717] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.5)]"
+            className="w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-heading text-[20px] text-[var(--soft-gray)]">
+            <h3 className="font-heading text-[20px] text-gray-900">
               {confirmTarget ? "Activar reserva online" : "Activar consulta por WhatsApp"}
             </h3>
-            <p className="mt-2 text-[13px] leading-relaxed text-[var(--soft-gray)]/78">
+            <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
               {confirmTarget ? (
                 <>
-                  En <span className="text-[var(--premium-gold)]">/turnos</span> los clientes podrán confirmar su
+                  En <span className="text-[#B88E2F]">/turnos</span> los clientes podrán confirmar su
                   turno en la web. El horario queda reservado en la agenda (sin pago online por ahora).
                 </>
               ) : (
                 <>
-                  En <span className="text-[var(--premium-gold)]">/turnos</span> no habrá confirmación ni pago:
+                  En <span className="text-[#B88E2F]">/turnos</span> no habrá confirmación ni pago:
                   verán la agenda y un botón para consultar por WhatsApp con el horario elegido.
                 </>
               )}
             </p>
             {saveError ? (
-              <p className="mt-3 rounded-xl border border-red-500/35 bg-red-950/35 px-3 py-2 text-[12px] text-red-200/95">
+              <p className="mt-3 rounded-xl border border-red-500/35 bg-red-50 px-3 py-2 text-[12px] text-red-700">
                 {saveError}
               </p>
             ) : null}
@@ -236,7 +236,7 @@ export function PanelPublicBookingMode() {
                 type="button"
                 onClick={() => setConfirmTarget(null)}
                 disabled={saving}
-                className="inline-flex h-9 items-center rounded-xl border border-white/15 px-3 text-[12px] font-semibold text-[var(--soft-gray)]/85 transition hover:bg-white/5 disabled:opacity-60"
+                className="inline-flex h-9 items-center rounded-xl border border-gray-200 px-3 text-[12px] font-semibold text-gray-700 transition hover:bg-gray-100 disabled:opacity-60"
               >
                 Cancelar
               </button>
@@ -244,7 +244,7 @@ export function PanelPublicBookingMode() {
                 type="button"
                 onClick={() => void applyMode(confirmTarget)}
                 disabled={saving}
-                className="inline-flex h-9 items-center rounded-xl border border-[var(--premium-gold)]/45 bg-[var(--premium-gold)]/15 px-3 text-[12px] font-semibold text-[var(--premium-gold)] transition hover:bg-[var(--premium-gold)]/22 disabled:opacity-60"
+                className="inline-flex h-9 items-center rounded-xl border border-[#B88E2F]/45 bg-[#B88E2F]/15 px-3 text-[12px] font-semibold text-[#B88E2F] transition hover:bg-[#B88E2F]/22 disabled:opacity-60"
               >
                 {saving ? "Guardando…" : "Sí, cambiar"}
               </button>

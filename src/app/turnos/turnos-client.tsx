@@ -1,27 +1,27 @@
 ﻿"use client";
 
-import {
-  CalendarDays,
-  ChevronLeft,
-  Home as HomeIcon,
-  MessageCircle,
-  Percent,
-  Sparkles,
-  User,
-} from "lucide-react";
-import Link from "next/link";
+import { Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { BookingPicker } from "@/components/booking/booking-picker";
-import { event as gaEvent } from "@/lib/gtag";
+import { BookingStepFreyjaServices } from "@/components/booking/booking-step-freyja-services";
+import { BookingWizardShell } from "@/components/booking/booking-wizard-shell";
 import {
   SALON_TREATMENT_OPTIONS,
   formatSalonDisplayDate,
   isLikelyWhatsappNumber,
 } from "@/lib/booking/salon-availability";
 import { buildPublicBookingConsultWhatsAppUrl } from "@/lib/booking/public-booking-consult";
+import { event as gaEvent, trackWizardContinue } from "@/lib/gtag";
 import { treatmentRequiresPublicDeposit } from "@/lib/reservations/public-deposit";
-import { findSalonTreatmentById } from "@/lib/treatments/catalog";
+import {
+  MAX_SERVICES_PER_BOOKING,
+  findSalonTreatmentById,
+  normalizeServiceIds,
+  primaryTreatmentIdFromServiceIds,
+  totalDurationMinutesForServiceIds,
+} from "@/lib/treatments/catalog";
 
 type TurnosClientProps = {
   initialTreatment?: string;
@@ -42,6 +42,7 @@ export default function TurnosClient({
   initialTreatment = "",
   publicOnlineBookingEnabled = true,
 }: TurnosClientProps) {
+  const router = useRouter();
   const treatmentParam = (() => {
     try {
       return decodeURIComponent(initialTreatment.trim());
@@ -53,12 +54,16 @@ export default function TurnosClient({
     (option) => option.id === treatmentParam || option.name === treatmentParam,
   );
 
-  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string>(initialMatch?.id ?? "");
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(initialMatch ? [initialMatch.id] : []);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(
+    initialMatch ? normalizeServiceIds([initialMatch.id]) : [],
+  );
+  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string>(
+    initialMatch ? primaryTreatmentIdFromServiceIds([initialMatch.id]) : "",
+  );
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [serviceLimitHint, setServiceLimitHint] = useState<string | null>(null);
-  const [treatmentFirstHintVisible, setTreatmentFirstHintVisible] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [whatsappOptIn, setWhatsappOptIn] = useState(true);
@@ -66,19 +71,9 @@ export default function TurnosClient({
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<"unknown" | "guest" | "authed">("unknown");
   const [sessionDisplayName, setSessionDisplayName] = useState<string | null>(null);
-  /** Horarios con solapes resueltos en servidor; `undefined` = no aplica, `null` = cargando. */
   const [remoteSlots, setRemoteSlots] = useState<string[] | null | undefined>(undefined);
-  const bookingFocusRef = useRef<HTMLDivElement | null>(null);
-  const dataSectionRef = useRef<HTMLDivElement | null>(null);
-  const paymentSectionRef = useRef<HTMLElement | null>(null);
-  const scrollPaymentTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevDatosCompleteRef = useRef(false);
   const sessionBootstrappedRef = useRef(false);
 
-  const selectedTreatment = useMemo(
-    () => SALON_TREATMENT_OPTIONS.find((option) => option.id === selectedTreatmentId),
-    [selectedTreatmentId],
-  );
   const selectedServices = useMemo(
     () =>
       selectedServiceIds.flatMap((id) => {
@@ -92,11 +87,7 @@ export default function TurnosClient({
     [selectedServices],
   );
   const totalSelectedDurationMinutes = useMemo(
-    () =>
-      selectedServiceIds.reduce((acc, id) => {
-        const t = findSalonTreatmentById(id);
-        return acc + (t?.durationMinutes ?? 0);
-      }, 0),
+    () => totalDurationMinutesForServiceIds(selectedServiceIds),
     [selectedServiceIds],
   );
   const totalSelectedDurationLabel = useMemo(() => {
@@ -104,16 +95,14 @@ export default function TurnosClient({
     if (total <= 0) return "";
     const h = Math.floor(total / 60);
     const m = total % 60;
-    if (h > 0 && m > 0) return `Duración ${h} h ${m} min`;
-    if (h > 0) return `Duración ${h} h`;
-    return `Duración ${m} min`;
+    if (h > 0 && m > 0) return `${h} h ${m} min`;
+    if (h > 0) return `${h} h`;
+    return `${m} min`;
   }, [totalSelectedDurationMinutes]);
   const primaryService = selectedServices[0];
 
-  const requiresDeposit = selectedServices.some((s) => treatmentRequiresPublicDeposit(s.id));
-
+  const requiresDeposit = selectedServiceIds.some((id) => treatmentRequiresPublicDeposit(id));
   const hasSlot = Boolean(selectedServices.length > 0 && selectedDate && selectedTime);
-
   const consultWhatsAppUrl = useMemo(() => {
     if (!hasSlot) return null;
     return buildPublicBookingConsultWhatsAppUrl({
@@ -123,24 +112,84 @@ export default function TurnosClient({
     });
   }, [hasSlot, selectedServicesSummary, selectedDate, selectedTime]);
   const datosComplete = Boolean(
-    customerName.trim().length >= 2 &&
-      isLikelyWhatsappNumber(customerPhone) &&
-      whatsappOptIn,
+    customerName.trim().length >= 2 && isLikelyWhatsappNumber(customerPhone) && whatsappOptIn,
   );
   const showWhatsappInvalidHint =
     customerPhone.trim().length >= 8 && !isLikelyWhatsappNumber(customerPhone);
-  const hasSessionProfile = sessionStatus === "authed" && customerName.trim().length >= 2 && isLikelyWhatsappNumber(customerPhone);
-  const activeStep = selectedServices.length === 0
-    ? 1
-    : !selectedDate
-      ? 2
-      : !selectedTime
-        ? 3
-        : !publicOnlineBookingEnabled
-          ? 5
-          : !datosComplete
-            ? 4
-            : 5;
+  const hasSessionProfile =
+    sessionStatus === "authed" &&
+    customerName.trim().length >= 2 &&
+    isLikelyWhatsappNumber(customerPhone);
+  const skipDatosStep = !publicOnlineBookingEnabled || hasSessionProfile;
+
+  const toggleServiceId = useCallback((id: string) => {
+    setSelectedServiceIds((prev) => {
+      let next: string[];
+      if (prev.includes(id)) {
+        next = prev.filter((x) => x !== id);
+      } else if (prev.length >= MAX_SERVICES_PER_BOOKING) {
+        setServiceLimitHint(`Máximo ${MAX_SERVICES_PER_BOOKING} tratamientos por turno.`);
+        return prev;
+      } else {
+        next = normalizeServiceIds([...prev, id]);
+      }
+      setSelectedTreatmentId(primaryTreatmentIdFromServiceIds(next));
+      setSelectedTime("");
+      return next;
+    });
+  }, []);
+
+  const clearSelectedServices = useCallback(() => {
+    setSelectedServiceIds([]);
+    setSelectedTreatmentId("");
+    setSelectedDate("");
+    setSelectedTime("");
+    setServiceLimitHint(null);
+  }, []);
+
+  const handleClearSelectedServices = useCallback(() => {
+    if (selectedServiceIds.length >= 2 && !window.confirm("¿Quitar todos los servicios seleccionados?")) {
+      return;
+    }
+    clearSelectedServices();
+  }, [clearSelectedServices, selectedServiceIds.length]);
+
+  const handleWizardBack = useCallback(() => {
+    if (wizardStep <= 1) {
+      router.push("/");
+      return;
+    }
+    if (wizardStep === 5 && skipDatosStep) {
+      setWizardStep(3);
+      return;
+    }
+    setWizardStep((s) => s - 1);
+  }, [router, wizardStep, skipDatosStep]);
+
+  const handleWizardContinue = useCallback(() => {
+    if (wizardStep === 1 && selectedServiceIds.length > 0) {
+      setWizardStep(2);
+      return;
+    }
+    if (wizardStep === 2 && selectedDate) {
+      setWizardStep(3);
+      return;
+    }
+    if (wizardStep === 3 && selectedTime) {
+      setWizardStep(skipDatosStep ? 5 : 4);
+      return;
+    }
+    if (wizardStep === 4 && datosComplete) {
+      setWizardStep(5);
+    }
+  }, [
+    wizardStep,
+    selectedServiceIds.length,
+    selectedDate,
+    selectedTime,
+    skipDatosStep,
+    datosComplete,
+  ]);
 
   useEffect(() => {
     try {
@@ -169,8 +218,9 @@ export default function TurnosClient({
     let retryTimer: number | null = null;
     const applyProfileFromReservations = (rows: MeReservationsResponse["reservations"]) => {
       const list = Array.isArray(rows) ? rows : [];
-      const latest = [...list]
-        .sort((a, b) => String(b.startsAtIso ?? "").localeCompare(String(a.startsAtIso ?? "")))[0];
+      const latest = [...list].sort((a, b) =>
+        String(b.startsAtIso ?? "").localeCompare(String(a.startsAtIso ?? "")),
+      )[0];
       if (latest?.customerName && customerName.trim().length < 2) {
         setCustomerName(latest.customerName.trim());
       }
@@ -189,7 +239,7 @@ export default function TurnosClient({
           }),
         );
       } catch {
-        // ignore localStorage failures
+        // ignore
       }
     };
 
@@ -223,28 +273,12 @@ export default function TurnosClient({
       }
     };
 
-    (async () => {
-      await run(1);
-    })();
+    void run(1);
     return () => {
       cancelled = true;
       if (retryTimer) window.clearTimeout(retryTimer);
     };
   }, []);
-
-  useEffect(() => {
-    if (selectedServices.length > 0) setTreatmentFirstHintVisible(false);
-  }, [selectedServices.length]);
-
-  useEffect(() => {
-    if (!treatmentFirstHintVisible) return;
-    const t = window.setTimeout(() => setTreatmentFirstHintVisible(false), 4500);
-    return () => window.clearTimeout(t);
-  }, [treatmentFirstHintVisible]);
-
-  useEffect(() => {
-    prevDatosCompleteRef.current = false;
-  }, [selectedTreatmentId, selectedDate, selectedTime]);
 
   useEffect(() => {
     if (!selectedDate || selectedServiceIds.length === 0) {
@@ -255,16 +289,14 @@ export default function TurnosClient({
     setRemoteSlots(null);
     const q = new URLSearchParams({
       dateKey: selectedDate,
-      treatmentId: selectedServiceIds[0] ?? "",
+      treatmentId: primaryTreatmentIdFromServiceIds(selectedServiceIds),
       serviceIds: selectedServiceIds.join(","),
       scope: "public",
     });
     fetch(`/api/booking/slots?${q.toString()}`)
       .then((res) => res.json())
       .then((data: { slots?: string[] }) => {
-        if (!cancelled) {
-          setRemoteSlots(Array.isArray(data.slots) ? data.slots : []);
-        }
+        if (!cancelled) setRemoteSlots(Array.isArray(data.slots) ? data.slots : []);
       })
       .catch(() => {
         if (!cancelled) setRemoteSlots([]);
@@ -288,43 +320,6 @@ export default function TurnosClient({
     return () => window.clearTimeout(t);
   }, [serviceLimitHint]);
 
-  const scheduleScrollToPaymentSection = useCallback(() => {
-    if (!hasSlot) return;
-    if (scrollPaymentTimeoutRef.current) clearTimeout(scrollPaymentTimeoutRef.current);
-    scrollPaymentTimeoutRef.current = setTimeout(() => {
-      scrollPaymentTimeoutRef.current = null;
-      paymentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 180);
-  }, [hasSlot]);
-
-  useEffect(() => {
-    return () => {
-      if (scrollPaymentTimeoutRef.current) clearTimeout(scrollPaymentTimeoutRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!hasSlot) {
-      prevDatosCompleteRef.current = datosComplete;
-      return;
-    }
-    const becameComplete = datosComplete && !prevDatosCompleteRef.current;
-    prevDatosCompleteRef.current = datosComplete;
-    if (becameComplete) scheduleScrollToPaymentSection();
-  }, [datosComplete, hasSlot, scheduleScrollToPaymentSection]);
-
-  useEffect(() => {
-    if (!hasSlot) return;
-    const id = requestAnimationFrame(() => {
-      if (publicOnlineBookingEnabled) {
-        dataSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        paymentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    });
-    return () => cancelAnimationFrame(id);
-  }, [hasSlot, selectedTime, publicOnlineBookingEnabled]);
-
   const trackConsultWhatsApp = () => {
     gaEvent("booking_consult_whatsapp", {
       treatment_id: primaryService?.id ?? "",
@@ -334,30 +329,40 @@ export default function TurnosClient({
     });
   };
 
-  const handleMercadoPagoCheckout = async () => {
-    if (!primaryService || selectedServices.length === 0 || !selectedDate || !selectedTime || !datosComplete) {
+  const handleConsultWhatsApp = () => {
+    if (!consultWhatsAppUrl) return;
+    trackConsultWhatsApp();
+    window.open(consultWhatsAppUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleConfirm = async () => {
+    const primary = findSalonTreatmentById(primaryTreatmentIdFromServiceIds(selectedServiceIds));
+    if (selectedServices.length === 0 || !primary || !selectedDate || !selectedTime || !datosComplete) {
       return;
     }
+    const subtitleMerged =
+      selectedServices.length > 1
+        ? `${selectedServices.length} servicio${selectedServices.length === 1 ? "" : "s"} combinados`
+        : primary.subtitle;
     setConfirmError(null);
     setCheckoutLoading(true);
     try {
-      const pendingBody = {
-        treatmentId: primaryService.id,
-        treatmentName: selectedServicesSummary,
-        subtitle: `${selectedServices.length} servicio${selectedServices.length === 1 ? "" : "s"} combinados`,
-        category: primaryService.category,
-        serviceIds: selectedServices.map((s) => s.id),
-        dateKey: selectedDate,
-        timeLocal: selectedTime,
-        displayDate: formatSalonDisplayDate(selectedDate),
-        customerName: customerName.trim(),
-        customerPhone: customerPhone.trim(),
-        whatsappOptIn,
-      };
       const resPending = await fetch("/api/reservations/pending", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pendingBody),
+        body: JSON.stringify({
+          treatmentId: primary.id,
+          treatmentName: selectedServicesSummary,
+          subtitle: subtitleMerged,
+          category: primary.category,
+          serviceIds: selectedServiceIds,
+          dateKey: selectedDate,
+          timeLocal: selectedTime,
+          displayDate: formatSalonDisplayDate(selectedDate),
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          whatsappOptIn,
+        }),
       });
       const dataPending = (await resPending.json()) as {
         error?: string;
@@ -374,16 +379,16 @@ export default function TurnosClient({
         return;
       }
 
-      if (dataPending.bookingMode === "confirmed") {
+      if (dataPending.bookingMode === "confirmed" || !requiresDeposit) {
         gaEvent("reservation_confirmed_no_deposit", {
-          treatment_id: primaryService.id,
+          treatment_id: primary.id,
           treatment_name: selectedServicesSummary,
           date_key: selectedDate,
           time_local: selectedTime,
         });
         const qs = new URLSearchParams({
           treatment: selectedServicesSummary,
-          subtitle: `${selectedServices.length} servicio${selectedServices.length === 1 ? "" : "s"} combinados`,
+          subtitle: subtitleMerged,
           date: formatSalonDisplayDate(selectedDate),
           time: selectedTime,
           name: customerName.trim(),
@@ -417,18 +422,20 @@ export default function TurnosClient({
         return;
       }
 
-      const snapshot = {
-        treatment: selectedServicesSummary,
-        subtitle: `${selectedServices.length} servicio${selectedServices.length === 1 ? "" : "s"} combinados`,
-        date: formatSalonDisplayDate(selectedDate),
-        time: selectedTime,
-        name: customerName.trim(),
-        phone: customerPhone.trim(),
-        id: dataPending.id,
-      };
-      sessionStorage.setItem("mp_turno_snapshot", JSON.stringify(snapshot));
+      sessionStorage.setItem(
+        "mp_turno_snapshot",
+        JSON.stringify({
+          treatment: selectedServicesSummary,
+          subtitle: subtitleMerged,
+          date: formatSalonDisplayDate(selectedDate),
+          time: selectedTime,
+          name: customerName.trim(),
+          phone: customerPhone.trim(),
+          id: dataPending.id,
+        }),
+      );
       gaEvent("reservation_checkout_start", {
-        treatment_id: primaryService.id,
+        treatment_id: primary.id,
         treatment_name: selectedServicesSummary,
         date_key: selectedDate,
         time_local: selectedTime,
@@ -441,319 +448,260 @@ export default function TurnosClient({
     }
   };
 
+  const wizardContinueDisabled =
+    (wizardStep === 1 && selectedServiceIds.length === 0) ||
+    (wizardStep === 2 && !selectedDate) ||
+    (wizardStep === 3 && !selectedTime) ||
+    (wizardStep === 4 && !datosComplete) ||
+    (wizardStep === 5 &&
+      publicOnlineBookingEnabled &&
+      (!datosComplete || checkoutLoading)) ||
+    (wizardStep === 5 && !publicOnlineBookingEnabled && !consultWhatsAppUrl);
+
+  const wizardContinueLabel = (() => {
+    if (wizardStep === 1) return `Continuar (${selectedServiceIds.length})`;
+    if (wizardStep === 5) {
+      if (!publicOnlineBookingEnabled) return "Consultar por WhatsApp";
+      if (checkoutLoading) return requiresDeposit ? "Preparando pago…" : "Confirmando…";
+      return requiresDeposit ? "Pagar seña con Mercado Pago" : "Confirmar turno";
+    }
+    return "Continuar";
+  })();
+
+  const onWizardContinue = () => {
+    if (wizardStep === 5) {
+      if (!publicOnlineBookingEnabled) {
+        handleConsultWhatsApp();
+        return;
+      }
+      void handleConfirm();
+      return;
+    }
+    trackWizardContinue(wizardStep);
+    handleWizardContinue();
+  };
+
+  const stepMeta = (() => {
+    if (wizardStep === 1) {
+      return { title: "Reservar turno", subtitle: "Elegí tus servicios" };
+    }
+    if (wizardStep === 2) {
+      return { title: "Elegí tu fecha", subtitle: "Seleccioná un día disponible" };
+    }
+    if (wizardStep === 3) {
+      return {
+        title: "Elegí tu horario",
+        subtitle: formatSalonDisplayDate(selectedDate) || "Horario disponible",
+      };
+    }
+    if (wizardStep === 4) {
+      return { title: "Tus datos", subtitle: "Para confirmar y enviarte recordatorios" };
+    }
+    if (!publicOnlineBookingEnabled) {
+      return { title: "Consultá tu turno", subtitle: "Revisá el resumen y escribinos por WhatsApp" };
+    }
+    return { title: "Confirmá tu turno", subtitle: "Revisá el resumen antes de continuar" };
+  })();
+
+  const summaryBar =
+    wizardStep === 1 ? (
+      <>
+        <span className="min-w-0 flex-1 text-sm font-medium text-gray-700">
+          {selectedServiceIds.length} seleccionado{selectedServiceIds.length === 1 ? "" : "s"}
+          {totalSelectedDurationMinutes > 0 ? ` · ${totalSelectedDurationLabel}` : ""}
+        </span>
+        {selectedServiceIds.length > 0 ? (
+          <button
+            type="button"
+            onClick={handleClearSelectedServices}
+            aria-label="Limpiar selección"
+            title="Limpiar selección"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={2} />
+          </button>
+        ) : null}
+      </>
+    ) : wizardStep === 2 ? (
+      <>
+        <span className="text-sm font-medium text-gray-700">
+          {selectedServiceIds.length} servicio{selectedServiceIds.length === 1 ? "" : "s"}
+          {selectedDate ? ` · ${formatSalonDisplayDate(selectedDate)}` : ""}
+        </span>
+        <div className="h-1.5 w-6 rounded-full bg-[#B88E2F]" />
+      </>
+    ) : wizardStep === 3 ? (
+      <>
+        <span className="text-sm font-medium text-gray-700">
+          {formatSalonDisplayDate(selectedDate)}
+          {selectedTime ? ` · ${selectedTime}` : ""}
+        </span>
+        <div className="h-1.5 w-6 rounded-full bg-[#B88E2F]" />
+      </>
+    ) : null;
+
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white">
-      <main className="mx-auto w-full max-w-md px-4 pt-6 pb-24">
-        <header className="mb-5 flex items-center justify-between">
-          <Link href="/" aria-label="Volver a inicio" className="cursor-pointer text-[var(--soft-gray)]/88">
-            <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
-          </Link>
-          <h1 className="text-[30px] leading-none font-heading">Reservar turno</h1>
-          <span className="h-5 w-5" />
-        </header>
-        {sessionStatus === "authed" && sessionDisplayName ? (
-          <p className="mb-4 text-center text-[14px] text-[var(--soft-gray)]/85">
-            Hola, <span className="font-semibold text-[var(--premium-gold)]">{sessionDisplayName}</span>
-          </p>
-        ) : null}
+    <BookingWizardShell
+      onBack={handleWizardBack}
+      title={stepMeta.title}
+      subtitle={stepMeta.subtitle}
+      summary={summaryBar}
+      continueLabel={wizardContinueLabel}
+      onContinue={onWizardContinue}
+      continueDisabled={wizardContinueDisabled}
+      continueLoading={checkoutLoading && wizardStep === 5 && publicOnlineBookingEnabled}
+    >
+      {sessionStatus === "authed" && sessionDisplayName && wizardStep === 1 ? (
+        <p className="mb-6 text-center text-[16px] text-gray-600">
+          Hola, <span className="font-semibold text-gray-900">{sessionDisplayName}</span>
+        </p>
+      ) : null}
 
-        {/* Aviso reserva pausada — oculto por ahora
-        {!publicOnlineBookingEnabled ? (
-          <p className="mb-4 rounded-xl border border-[var(--premium-gold)]/25 bg-[var(--premium-gold)]/8 px-3 py-2.5 text-center text-[12px] leading-snug text-[var(--soft-gray)]/88">
-            La reserva online está pausada. Elegí servicio, día y hora en la agenda (los ocupados no aparecen) y
-            consultá por WhatsApp.
-          </p>
-        ) : null}
-        */}
+      {wizardStep === 1 ? (
+        <BookingStepFreyjaServices
+          selectedServiceIds={selectedServiceIds}
+          onToggleTreatmentId={toggleServiceId}
+          comboAlertText={serviceLimitHint}
+        />
+      ) : null}
 
+      {wizardStep === 2 ? (
         <BookingPicker
+          wizardSection="date"
           selectedTreatmentId={selectedTreatmentId}
-          onTreatmentIdChange={(id) => {
-            setSelectedTreatmentId(id);
-            setSelectedTime("");
-          }}
+          onTreatmentIdChange={setSelectedTreatmentId}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
           selectedTime={selectedTime}
           onTimeChange={setSelectedTime}
-          remoteTimeSlots={
-            selectedDate && selectedServiceIds.length > 0 ? (remoteSlots ?? null) : undefined
-          }
-          selectedCountLabel={
-            selectedServices.length > 0
-              ? `${selectedServices.length} servicio${selectedServices.length === 1 ? "" : "s"} seleccionado${
-                  selectedServices.length === 1 ? "" : "s"
-                }`
-              : undefined
-          }
-          selectedDurationLabel={selectedServices.length > 0 ? totalSelectedDurationLabel : undefined}
-          summaryTitle={selectedServices.length > 0 ? selectedServicesSummary : undefined}
-          bookingFocusRef={bookingFocusRef}
-          treatmentFirstHintVisible={treatmentFirstHintVisible}
-          onTreatmentFirstHintVisible={setTreatmentFirstHintVisible}
+          treatmentFirstHintVisible={false}
+          onTreatmentFirstHintVisible={() => {}}
           monthAvailabilityServiceIds={selectedServiceIds}
-          multiSelect
-          selectedTreatmentIds={selectedServiceIds}
-          onToggleTreatmentId={(id) => {
-            setSelectedServiceIds((prev) => {
-              if (prev.includes(id)) return prev.filter((x) => x !== id);
-              if (prev.length >= 4) {
-                setServiceLimitHint("Máximo 4 tratamientos por turno.");
-                return prev;
-              }
-              return [...prev, id];
-            });
-            setSelectedTime("");
-          }}
-          onClearTreatmentIds={() => {
-            setSelectedServiceIds([]);
-            setSelectedTreatmentId("");
-            setSelectedTime("");
-          }}
-          comboHintText="Podés elegir hasta 4 tratamientos en un mismo turno (según disponibilidad de agenda)."
-          comboDurationLabel={totalSelectedDurationLabel}
-          comboAlertText={serviceLimitHint}
         />
+      ) : null}
 
-        {hasSlot && (
-          <div ref={dataSectionRef} className="mt-6 space-y-5">
-            {publicOnlineBookingEnabled && !hasSessionProfile ? (
-              <section
-                className={`rounded-2xl border bg-[#171717] px-4 py-4 transition-all ${
-                  activeStep === 4
-                    ? "border-[var(--premium-gold)] shadow-[0_0_0_1px_rgba(201,169,106,0.22),0_0_22px_rgba(201,169,106,0.18)]"
-                    : "border-white/8"
-                }`}
-              >
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-[11px] tracking-[0.14em] text-[var(--soft-gray)]/55">Paso 4</p>
-                    <p className="mt-1 text-[18px] font-heading text-[var(--soft-gray)]">Tus datos</p>
-                    <p className="mt-1 text-[12px] text-[var(--soft-gray)]/58">
-                      Completá tu nombre y WhatsApp para recordatorios.
-                    </p>
-                    {activeStep === 4 && (
-                      <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--premium-gold)]/92">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--premium-gold)]" />
-                        <span>Necesitamos estos datos antes del pago</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <label htmlFor="customerName" className="text-[11px] tracking-[0.12em] text-[var(--soft-gray)]/55">
-                      Nombre y apellido
-                    </label>
-                    <input
-                      id="customerName"
-                      name="customerName"
-                      autoComplete="name"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Como figura en tu DNI o preferís que te llamemos"
-                      className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#141414] px-3 py-3 text-[15px] text-[var(--soft-gray)] outline-none placeholder:text-[var(--soft-gray)]/35 focus:border-[var(--premium-gold)]/55"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="customerPhone" className="text-[11px] tracking-[0.12em] text-[var(--soft-gray)]/55">
-                      WhatsApp
-                    </label>
-                    <input
-                      id="customerPhone"
-                      name="customerPhone"
-                      type="tel"
-                      autoComplete="tel"
-                      inputMode="tel"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      onBlur={() => {
-                        const nameOk = customerName.trim().length >= 2;
-                        const phoneOk = isLikelyWhatsappNumber(customerPhone);
-                        if (hasSlot && nameOk && phoneOk && whatsappOptIn) {
-                          scheduleScrollToPaymentSection();
-                        }
-                      }}
-                      placeholder="Ej: +54 9 11 2345-6789"
-                      aria-invalid={showWhatsappInvalidHint}
-                      className={`mt-1.5 w-full rounded-xl border bg-[#141414] px-3 py-3 text-[15px] text-[var(--soft-gray)] outline-none placeholder:text-[var(--soft-gray)]/35 focus:border-[var(--premium-gold)]/55 ${
-                        showWhatsappInvalidHint ? "border-amber-500/45" : "border-white/10"
-                      }`}
-                    />
-                    <p className="mt-1 text-[11px] text-[var(--soft-gray)]/45">
-                      Mismo número que usás en WhatsApp.
-                    </p>
-                    {showWhatsappInvalidHint ? (
-                      <p className="mt-1 text-[11px] leading-snug text-amber-200/90">
-                        Revisá el número: tiene que tener entre 10 y 15 dígitos en total (podés usar +54, espacios o
-                        guiones).
-                      </p>
-                    ) : null}
-                  </div>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/8 bg-black/20 px-3 py-3">
-                    <input
-                      type="checkbox"
-                      checked={whatsappOptIn}
-                      onChange={(e) => setWhatsappOptIn(e.target.checked)}
-                      className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 accent-[var(--premium-gold)]"
-                    />
-                    <span className="text-[12px] leading-snug text-[var(--soft-gray)]/78">
-                      Acepto recibir recordatorios y avisos de mi turno por WhatsApp.
-                    </span>
-                  </label>
-                </div>
-              </section>
-            ) : publicOnlineBookingEnabled ? (
-              <section className="rounded-2xl border border-emerald-500/25 bg-emerald-950/15 px-4 py-3 text-[13px] text-emerald-100/90">
-                Usaremos tus datos guardados para confirmar el turno.
-              </section>
-            ) : null}
+      {wizardStep === 3 ? (
+        <BookingPicker
+          wizardSection="time"
+          selectedTreatmentId={selectedTreatmentId}
+          onTreatmentIdChange={setSelectedTreatmentId}
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          selectedTime={selectedTime}
+          onTimeChange={setSelectedTime}
+          remoteTimeSlots={remoteSlots ?? null}
+          treatmentFirstHintVisible={false}
+          onTreatmentFirstHintVisible={() => {}}
+          monthAvailabilityServiceIds={selectedServiceIds}
+        />
+      ) : null}
 
-            <section
-              ref={paymentSectionRef}
-              className={`rounded-2xl border bg-[#171717] px-4 py-4 transition-all ${
-                activeStep === 5
-                  ? "border-[var(--premium-gold)] shadow-[0_0_0_1px_rgba(201,169,106,0.22),0_0_22px_rgba(201,169,106,0.18)]"
-                  : "border-white/8"
-              }`}
-            >
-              <p className="text-[11px] tracking-[0.14em] text-[var(--soft-gray)]/55">
-                Paso {publicOnlineBookingEnabled ? 5 : 4}
-              </p>
-              {publicOnlineBookingEnabled ? (
-              <>
-              <p className="mt-1 text-[18px] font-heading text-[var(--soft-gray)]">
-                {requiresDeposit ? "Seña con Mercado Pago" : "Confirmar turno"}
-              </p>
-              <p className="mt-1 text-[12px] text-[var(--soft-gray)]/58">
-                {requiresDeposit
-                  ? "Reservá el horario abonando la seña. Monto y política la define la clínica."
-                  : "Este servicio se reserva sin seña. Te enviamos recordatorio por WhatsApp antes del turno."}
-              </p>
-              {activeStep === 5 && datosComplete && requiresDeposit && (
-                <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--premium-gold)]/92">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--premium-gold)]" />
-                  <span>Pagá la seña: te llevamos a Mercado Pago</span>
-                </div>
-              )}
-              {requiresDeposit ? (
-                <p className="mt-3 text-[11px] leading-snug text-[var(--soft-gray)]/50">
-                  El turno se confirma cuando Mercado Pago acredita el pago (no al volver del navegador).
-                </p>
-              ) : (
-                <p className="mt-3 text-[11px] leading-snug text-[var(--soft-gray)]/50">
-                  Al confirmar, el turno queda agendado. Podés cambiar fecha u horario arriba si necesitás otro
-                  servicio.
-                </p>
-              )}
-              <div className="mt-4">
-                <button
-                  type="button"
-                  disabled={!datosComplete || checkoutLoading}
-                  onClick={() => void handleMercadoPagoCheckout()}
-                  className={`flex h-[52px] w-full items-center justify-center gap-2.5 rounded-xl text-[16px] font-semibold transition-all ${
-                    datosComplete && !checkoutLoading
-                      ? requiresDeposit
-                        ? "cursor-pointer bg-[#009EE3] text-white shadow-[0_8px_24px_rgba(0,158,227,0.35)]"
-                        : "cursor-pointer bg-[var(--premium-gold)] text-black shadow-[0_8px_24px_rgba(201,169,106,0.28)]"
-                      : "cursor-not-allowed bg-[#2a2a2a] text-white/40"
-                  } ${checkoutLoading ? "cursor-wait" : ""}`}
-                >
-                  {requiresDeposit ? (
-                    <img
-                      src="/Mercado_Pago_idp_LvMgpe_1.svg"
-                      alt=""
-                      className={`h-8 w-auto shrink-0 object-contain sm:h-9 ${
-                        datosComplete && !checkoutLoading ? "opacity-100" : "opacity-45"
-                      }`}
-                      width={39}
-                      height={28}
-                      decoding="async"
-                    />
-                  ) : null}
-                  <span className="text-[13px] font-medium opacity-95">
-                    {checkoutLoading
-                      ? requiresDeposit
-                        ? "Preparando pago…"
-                        : "Confirmando…"
-                      : requiresDeposit
-                        ? "Pagar seña con Mercado Pago"
-                        : "Confirmar reserva"}
-                  </span>
-                </button>
-              </div>
-              </>
-              ) : (
-                <>
-                  <p className="mt-1 text-[18px] font-heading text-[var(--soft-gray)]">Consultar por WhatsApp</p>
-                  <p className="mt-1 text-[12px] text-[var(--soft-gray)]/58">
-                    Te abrimos un chat con el servicio, día y hora que elegiste. Carla confirma disponibilidad y
-                    coordina el turno.
-                  </p>
-                  <p className="mt-3 rounded-xl border border-white/8 bg-black/25 px-3 py-2.5 text-[12px] leading-relaxed text-[var(--soft-gray)]/82">
-                    <span className="block text-[var(--premium-gold)]/90">{selectedServicesSummary}</span>
-                    <span className="mt-1 block">
-                      {formatSalonDisplayDate(selectedDate)} · {selectedTime}
-                    </span>
-                  </p>
-                  <div className="mt-4">
-                    <a
-                      href={consultWhatsAppUrl ?? "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        if (!consultWhatsAppUrl) {
-                          e.preventDefault();
-                          return;
-                        }
-                        trackConsultWhatsApp();
-                      }}
-                      className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-[#25D366] text-[16px] font-semibold text-white no-underline shadow-[0_8px_24px_rgba(37,211,102,0.28)] transition-all hover:bg-[#20bd5a]"
-                    >
-                      <MessageCircle className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
-                      <span>Consultar por WhatsApp</span>
-                    </a>
-                  </div>
-                </>
-              )}
-              {confirmError ? (
-                <p
-                  role="alert"
-                  className="mt-3 rounded-xl border border-red-500/35 bg-red-950/35 px-3 py-2.5 text-center text-[12px] leading-snug text-red-200/95"
-                >
-                  {confirmError}
-                </p>
-              ) : null}
-            </section>
+      {wizardStep === 4 && publicOnlineBookingEnabled && !hasSessionProfile ? (
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="customerName" className="text-[16px] font-semibold text-gray-900">
+              Nombre y apellido
+            </label>
+            <input
+              id="customerName"
+              name="customerName"
+              autoComplete="name"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Como figura en tu DNI o preferís que te llamemos"
+              className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[16px] text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#B88E2F] focus:ring-2 focus:ring-[#B88E2F]/25"
+            />
           </div>
-        )}
-      </main>
-
-      <nav className="fixed right-0 bottom-0 left-0 z-30">
-        <div className="flex w-full items-center justify-between border-t border-white/8 bg-black/60 px-4 py-2.5 backdrop-blur-[16px]">
-          <Link href="/" className="flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1">
-            <HomeIcon className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.9} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">Inicio</span>
-          </Link>
-          <Link href="/tratamientos" className="flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1">
-            <Sparkles className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">Tratamientos</span>
-          </Link>
-          <Link href="/turnos" className="flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1">
-            <CalendarDays className="h-5 w-5 text-[var(--premium-gold)]" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--premium-gold)]">Turnos</span>
-          </Link>
-          <Link href="/promociones" className="flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1">
-            <Percent className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">Promos</span>
-          </Link>
-          <Link href="/perfil" className="flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1">
-            <User className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">Perfil</span>
-          </Link>
+          <div>
+            <label htmlFor="customerPhone" className="text-[16px] font-semibold text-gray-900">
+              WhatsApp
+            </label>
+            <input
+              id="customerPhone"
+              name="customerPhone"
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              placeholder="Ej: +54 9 11 2345-6789"
+              aria-invalid={showWhatsappInvalidHint}
+              className={`mt-2 w-full rounded-xl border bg-white px-4 py-3.5 text-[16px] text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#B88E2F] focus:ring-2 focus:ring-[#B88E2F]/25 ${
+                showWhatsappInvalidHint ? "border-amber-400" : "border-gray-200"
+              }`}
+            />
+            {showWhatsappInvalidHint ? (
+              <p className="mt-2 text-[16px] text-amber-700">
+                Revisá el número: entre 10 y 15 dígitos (podés usar +54, espacios o guiones).
+              </p>
+            ) : (
+              <p className="mt-2 text-[16px] text-gray-500">Mismo número que usás en WhatsApp.</p>
+            )}
+          </div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-100 bg-[#F5F5F5] px-4 py-4">
+            <input
+              type="checkbox"
+              checked={whatsappOptIn}
+              onChange={(e) => setWhatsappOptIn(e.target.checked)}
+              className="mt-1 h-5 w-5 accent-[#B88E2F]"
+            />
+            <span className="text-[16px] leading-snug text-gray-800">
+              Acepto recibir recordatorios y avisos de mi turno por WhatsApp.
+            </span>
+          </label>
         </div>
-      </nav>
-    </div>
+      ) : null}
+
+      {wizardStep === 5 ? (
+        <div className="space-y-4">
+          <div className="rounded-[24px] border border-gray-100 bg-[#F5F5F5] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+            <p className="text-sm font-semibold tracking-wide text-[#B88E2F] uppercase">Resumen del turno</p>
+            <dl className="mt-4 space-y-4">
+              <div>
+                <dt className="text-sm text-gray-500">Servicio</dt>
+                <dd className="text-lg font-semibold text-gray-900">{selectedServicesSummary}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Fecha</dt>
+                <dd className="text-lg font-semibold text-gray-900">{formatSalonDisplayDate(selectedDate)}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-gray-500">Horario</dt>
+                <dd className="text-lg font-semibold text-gray-900">{selectedTime}</dd>
+              </div>
+              {totalSelectedDurationLabel ? (
+                <div>
+                  <dt className="text-sm text-gray-500">Duración estimada</dt>
+                  <dd className="text-lg font-semibold text-gray-900">{totalSelectedDurationLabel}</dd>
+                </div>
+              ) : null}
+              {publicOnlineBookingEnabled && hasSessionProfile ? (
+                <div>
+                  <dt className="text-sm text-gray-500">Contacto</dt>
+                  <dd className="text-lg font-semibold text-gray-900">
+                    {customerName.trim()} · {customerPhone.trim()}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </div>
+          <p className="text-[16px] leading-relaxed text-gray-600">
+            {publicOnlineBookingEnabled
+              ? requiresDeposit
+                ? "Reservá el horario abonando la seña. El turno se confirma cuando Mercado Pago acredita el pago."
+                : "Al confirmar, el turno queda agendado y te enviamos recordatorio por WhatsApp."
+              : "Te abrimos un chat con el servicio, día y hora que elegiste. Carla confirma disponibilidad y coordina el turno."}
+          </p>
+          {confirmError ? (
+            <p
+              role="alert"
+              className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-[16px] text-red-800"
+            >
+              {confirmError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </BookingWizardShell>
   );
 }
-
