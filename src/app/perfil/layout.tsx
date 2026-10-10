@@ -6,7 +6,7 @@ import { PerfilSessionProvider } from "@/components/perfil/perfil-session-provid
 export default function PerfilLayout({ children }: { children: ReactNode }) {
   return (
     <PerfilSessionProvider>
-      <div className="min-h-screen bg-[var(--background)] text-white">
+      <div className="agenda-dark min-h-screen bg-[var(--background)] text-white">
         {children}
         <PerfilBottomNav />
       </div>

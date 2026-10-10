@@ -6,5 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function PanelTurnosLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <div className="agenda-dark min-h-screen">{children}</div>;
 }

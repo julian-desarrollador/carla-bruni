@@ -3,13 +3,15 @@ import { Montserrat, Playfair_Display } from "next/font/google";
 import { headers } from "next/headers";
 import { BRAND_LOGO_SRC } from "@/components/brand-logo";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { ShopProvider } from "@/components/shop/shop-provider";
+import { PublicChrome } from "@/components/shop/space-nav";
 import { resolvePublicSiteOrigin } from "@/lib/site-origin";
 import "./globals.css";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const playfair = Playfair_Display({
@@ -34,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: "Carla Bruni · Espacio Freyja",
       template: "%s | Carla Bruni",
     },
-    description: "Reservá tu turno con Carla Bruni · dermocosmiatra · Espacio Freyja",
+    description: "Espacio Freyja · Carla Bruni. Tu piel, tu equilibrio. Protocolos según el analizador facial Baumann.",
     icons: {
       icon: [
         { url: `/favicon-64.png?v=${ASSET_V}`, sizes: "64x64", type: "image/png" },
@@ -51,8 +53,8 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "es_AR",
       url: `${siteOrigin}/`,
       siteName: "Carla Bruni · Espacio Freyja",
-      title: "Carla Bruni · Reserva online",
-      description: "Carla Bruni, dermocosmiatra · Espacio Freyja",
+      title: "Carla Bruni · Espacio Freyja",
+      description: "Tu piel, tu equilibrio. Protocolos según el analizador facial Baumann.",
       images: [
         {
           url: ogImageAbsolute,
@@ -83,10 +85,12 @@ export default function RootLayout({
         <link rel="preload" href={BRAND_LOGO_SRC} as="image" />
       </head>
       <body
-        className={`${montserrat.variable} ${playfair.variable} min-h-screen bg-[var(--background)] text-white antialiased`}
+        className={`${montserrat.variable} ${playfair.variable} min-h-screen bg-[var(--background)] text-[var(--foreground)] antialiased`}
       >
         <GoogleAnalytics />
-        {children}
+        <ShopProvider>
+          <PublicChrome>{children}</PublicChrome>
+        </ShopProvider>
       </body>
     </html>
   );

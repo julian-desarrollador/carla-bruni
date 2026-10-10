@@ -8,7 +8,7 @@ import { useCallback, useMemo, useState } from "react";
 export type { HomeTestimonial } from "@/lib/home-testimonials-data";
 
 const arrowBtnClass =
-  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/14 bg-black/30 text-[var(--soft-gray)] transition hover:border-[var(--premium-gold)]/45 hover:text-[var(--premium-gold)]";
+  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#2324201f] bg-[#f7f6f1] text-[#64675f] transition hover:border-[#8C6844] hover:text-[#8C6844]";
 
 function avatarLetterFromName(name: string): string {
   const m = name.trim().match(/\p{L}/u);
@@ -50,7 +50,7 @@ export function HomeTestimonials() {
   const showNav = n > 1;
 
   return (
-    <section className="mx-auto w-[84%]" aria-labelledby="home-testimonios-title">
+    <section className="mx-auto w-full max-w-[1160px] px-5" aria-labelledby="home-testimonios-title">
       <div className="mb-3 flex items-end justify-between gap-2">
         <h2
           id="home-testimonios-title"
@@ -78,12 +78,12 @@ export function HomeTestimonials() {
         ) : null}
 
         <article
-          className="min-w-0 flex-1 rounded-[28px] border border-white/10 bg-[rgba(0,0,0,0.3)] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.2)] backdrop-blur-[10px] md:border-[var(--border-subtle)] md:bg-[color-mix(in_srgb,var(--surface-raised)_92%,transparent)] md:backdrop-blur-[6px]"
+          className="min-w-0 flex-1 rounded-[28px] border border-[#2324201f] bg-[#f7f6f1] p-4 shadow-[0_12px_28px_rgba(58,50,44,0.06)]"
           aria-live="polite"
         >
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/12 bg-[color-mix(in_srgb,var(--surface-raised)_55%,#0a0a0a)]">
+              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#2324201f] bg-[#dedcd2]">
                 {t.imageSrc ? (
                   <Image
                     key={t.imageSrc}

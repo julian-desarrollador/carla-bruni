@@ -1,8 +1,7 @@
 "use client";
 
 import { BrandLogo } from "@/components/brand-logo";
-import { CalendarDays, Home as HomeIcon, Percent, Sparkles, User } from "lucide-react";
-import Link from "next/link";
+import { SpaceFooter } from "@/components/shop/space-footer";
 import { useRef, useState } from "react";
 
 type LumiTip = {
@@ -72,8 +71,8 @@ export default function TipsDeLumiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white">
-      <main className="mx-auto w-full max-w-md px-4 pt-6 pb-24">
+    <div className="min-h-screen bg-white text-[#181713]">
+      <main className="mx-auto w-full max-w-[1160px] px-4 pt-6">
         <header className="mb-2 text-center">
           <BrandLogo size="page" className="mx-auto mt-3 mb-[-0.5rem]" />
           <div
@@ -108,14 +107,14 @@ export default function TipsDeLumiPage() {
               className="h-full w-full object-cover"
             />
             {/* Degradado superior: une la imagen con el fondo negro de la app */}
-            <div className="pointer-events-none absolute right-0 top-0 left-0 h-16 bg-gradient-to-b from-[#111111] via-black/80 to-transparent" />
+            <div className="pointer-events-none absolute right-0 top-0 left-0 h-16 bg-gradient-to-b from-white via-white/80 to-transparent" />
             {/* Degradado general para lectura sobre la imagen */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/18 to-transparent" />
             {/* Degradado inferior para transición suave hacia el texto / fondo, similar a Tratamientos */}
-            <div className="pointer-events-none absolute right-0 bottom-0 left-0 h-24 bg-gradient-to-b from-transparent to-[#111111]" />
+            <div className="pointer-events-none absolute right-0 bottom-0 left-0 h-24 bg-gradient-to-b from-transparent to-white" />
 
             <div className="absolute right-0 bottom-0 left-0 px-4 pb-4">
-              <h2 className="text-[26px] leading-[1.14] font-heading text-[var(--soft-gray)]">
+              <h2 className="text-[26px] leading-[1.14] font-heading text-white">
                 <span className="mr-1 text-[var(--premium-gold)]">✦</span>
                 {currentTip.titleLines[0]}
                 <br />
@@ -124,8 +123,8 @@ export default function TipsDeLumiPage() {
             </div>
           </div>
 
-          <div className="relative z-10 -mt-4 bg-gradient-to-b from-[#111111] to-[#111111] px-4 py-4">
-            <p className="text-[14px] leading-[1.72] text-[var(--soft-gray)]/92">
+          <div className="relative z-10 -mt-4 bg-white px-4 py-4">
+            <p className="text-[14px] leading-[1.72] text-[#181713]">
               {currentTip.content}
             </p>
           </div>
@@ -146,39 +145,7 @@ export default function TipsDeLumiPage() {
           ))}
         </div>
       </main>
-
-      <nav className="fixed right-0 bottom-0 left-0 z-30">
-        <div className="flex w-full items-center justify-between border-t border-white/8 bg-black/60 px-4 py-2.5 backdrop-blur-[16px]">
-          <Link href="/" className="flex min-w-0 flex-1 flex-col items-center gap-1">
-            <HomeIcon className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.9} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">
-              Inicio
-            </span>
-          </Link>
-          <Link href="/tratamientos" className="flex min-w-0 flex-1 flex-col items-center gap-1">
-            <Sparkles className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">
-              Tratamientos
-            </span>
-          </Link>
-          <Link href="/turnos" className="flex min-w-0 flex-1 flex-col items-center gap-1">
-            <CalendarDays className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">
-              Turnos
-            </span>
-          </Link>
-          <Link href="/promociones" className="flex min-w-0 flex-1 flex-col items-center gap-1">
-            <Percent className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em] text-[var(--soft-gray)]/80">
-              Promos
-            </span>
-          </Link>
-          <Link href="/perfil" className="flex min-w-0 flex-1 flex-col items-center gap-1 text-[var(--soft-gray)]/80">
-            <User className="h-5 w-5 text-[var(--soft-gray)]/90" strokeWidth={1.8} />
-            <span className="text-[9px] tracking-[0.12em]">Perfil</span>
-          </Link>
-        </div>
-      </nav>
+      <SpaceFooter />
     </div>
   );
 }
