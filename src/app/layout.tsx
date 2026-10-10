@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteOrigin = resolvePublicSiteOrigin(h);
   const metadataBase = new URL(`${siteOrigin}/`);
   /** Sin `?v=` en la URL: algunos scrapers de Meta fallan con query en og:image. */
-  const ogImageAbsolute = `${siteOrigin}/og-image-v4.jpg`;
+  const ogImageAbsolute = `${siteOrigin}/og-image-v5.jpg`;
 
   return {
     metadataBase,
@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
           secureUrl: ogImageAbsolute,
           width: 1200,
           height: 630,
-          alt: "Carla Bruni · Espacio Freyja",
+          alt: "Pared de Espacio Freyja, con los ocho kits",
           type: "image/jpeg",
         },
       ],

@@ -12,6 +12,7 @@ const PUBLIC_ASSET_PATHS = new Set([
   "/apple-touch-icon.png",
   "/og-image.jpg",
   "/og-image-v4.jpg",
+  "/og-image-v5.jpg",
   "/icon-192.png",
   "/icon-512.png",
 ]);
@@ -41,6 +42,7 @@ export const config = {
     "/apple-touch-icon.png",
     "/og-image.jpg",
     "/og-image-v4.jpg",
+    "/og-image-v5.jpg",
     "/icon-192.png",
     "/icon-512.png",
     "/panel-turnos",
